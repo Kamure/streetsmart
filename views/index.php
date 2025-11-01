@@ -16,7 +16,7 @@
       <img src="../assets/images/logo.png" alt="StreetSmart Logo" width="65" height="65"> StreetSmart
     </a>
     <div>
-      <a href="login.php" class="btn btn-outline-primary me-2">Login</a>
+      <a href="login.php" class="btn btn-primary">Login</a>
       <a href="register.php" class="btn btn-primary">Register</a>
     </div>
   </div>
@@ -30,7 +30,7 @@
   </div>
 </section>
 
-<footer class="text-center py-4 bg-light mt-5">
+<footer class="text-center" style="margin-top: 50px; color: black;">
   <small>© 2025 StreetSmart Market. All Rights Reserved.</small>
 </footer>
 
