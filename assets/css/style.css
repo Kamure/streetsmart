@@ -121,3 +121,162 @@ footer a:hover {
     font-size: 1.5rem;
   }
 }
+
+/* Dashboard Styling */
+.dashboard-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 250px;
+  background-color: #2d4059;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem 1rem;
+}
+
+.sidebar h4 {
+  color: #ffd700;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+}
+
+.sidebar a {
+  color: #f1f1f1;
+  text-decoration: none;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  display: block;
+}
+
+.sidebar a:hover,
+.sidebar a.active {
+  background-color: #407bba;
+  color: #fff;
+}
+
+.logout-btn {
+  margin-top: auto;
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 0.7rem;
+  border-radius: 6px;
+  text-align: center;
+  transition: background 0.3s ease;
+}
+
+.logout-btn:hover {
+  background-color: #c0392b;
+}
+
+/* Main content area */
+.main-content {
+  flex: 1;
+  background-color: #f8f9fc;
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+.main-content h3 {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 1.5rem;
+}
+
+/* Product Grid */
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 1.5rem;
+}
+
+.product-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+.product-card img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+}
+
+.product-card .card-body {
+  padding: 1rem;
+  text-align: center;
+}
+
+.product-card h6 {
+  font-weight: 600;
+  color: #333;
+}
+
+.product-card p {
+  margin: 0.5rem 0;
+  color: #777;
+}
+
+.btn-outline-primary {
+  color: #407bba;
+  border: 1px solid #407bba;
+  transition: all 0.3s ease;
+}
+
+.btn-outline-primary:hover {
+  background-color: #407bba;
+  color: #fff;
+}
+
+/* Tables (for seller dashboard) */
+.table th {
+  background-color: #407bba;
+  color: white;
+}
+
+.table td, .table th {
+  vertical-align: middle;
+}
+
+/* Alerts */
+.alert {
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .dashboard-container {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    flex-direction: row;
+    overflow-x: auto;
+    justify-content: space-around;
+  }
+
+  .sidebar a {
+    padding: 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  .main-content {
+    padding: 1rem;
+  }
+}
