@@ -20,7 +20,11 @@
         <p class="text-muted">Join StreetSmart Market today</p>
       </div>
 
-      <form action="../controllers/register_controller.php" method="POST">
+<<<<<<< HEAD
+      <form action="../controllers/register.php" method="POST">
+=======
+      <form action="../controllers/register_controller.php" method="POST"> 
+>>>>>>> 174be5e7663f25d51d704660b45baee4a07b1cfd
         <div class="mb-3">
           <label for="name" class="form-label fw-semibold">Full Name</label>
           <input type="text" class="form-control" id="name" name="name">
@@ -29,6 +33,11 @@
         <div class="mb-3">
           <label for="email" class="form-label fw-semibold">Email</label>
           <input type="email" class="form-control" id="email" name="email">
+        </div>
+
+        <div class="mb-3">
+         <label for="phone" class="form-label fw-semibold">Phone Number</label>
+         <input type="text" class="form-control" id="phone" name="phone" maxlength="10" placeholder="Enter your 10 digit phone number" required>
         </div>
 
         <div class="mb-3">
