@@ -21,7 +21,11 @@
       </div>
 
 <<<<<<< HEAD
+<<<<<<< HEAD
       <form action="../controllers/register.php" method="POST">
+=======
+      <form action="../controllers/register_controller.php" method="POST"> 
+>>>>>>> 174be5e7663f25d51d704660b45baee4a07b1cfd
 =======
       <form action="../controllers/register_controller.php" method="POST"> 
 >>>>>>> 174be5e7663f25d51d704660b45baee4a07b1cfd

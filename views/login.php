@@ -21,7 +21,7 @@
         <p class="text-muted">Login to continue shopping or selling</p>
       </div>
 
-      <form action="../controllers/login_controller.php" method="POST">
+      <form action="../controllers/login_controller.php" method="POST"> 
         <div class="mb-3">
           <label for="email" class="form-label fw-semibold">Email</label>
           <input type="email" class="form-control" id="email" name="email">

@@ -1,103 +1,154 @@
+<?php
+session_start();
+require_once __DIR__ . '/../../config/database.php';
+
+// Redirect if not logged in or not a seller
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'seller') {
+  header('Location: ../login.php');
+  exit;
+}
+
+$user_id = $_SESSION['user_id'];
+$msg = $_GET['msg'] ?? null;
+
+// Fetch seller’s products
+$products = [];
+$sql = "SELECT id, name, price, stock, category, image FROM products WHERE seller_id = ? ORDER BY id DESC";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($result && $result->num_rows > 0) {
+  while ($row = $result->fetch_assoc()) {
+    $products[] = $row;
+  }
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Seller Dashboard | StreetSmart Market</title>
-
-  <link rel="icon" type="image/png" href="../../assets/images/favicon.png" />
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link rel="stylesheet" href="../../assets/css/style.css" />
+  <link rel="icon" type="image/png" href="../../assets/images/favicon.png">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/style.css">
 </head>
 
-<body class="seller-dashboard">
+<body class="dashboard-body">
 
-  <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+  <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
     <div class="container-fluid px-4">
       <a class="navbar-brand d-flex align-items-center" href="#">
-        <img src="../../assets/images/logo.png" alt="StreetSmart" class="navbar-logo" width="40" height="40" />
-        <span class="fw-bold">StreetSmart Seller</span>
+        <img src="../../assets/images/logo.png" alt="StreetSmart Market" class="logo me-2">
+        <span class="fw-bold text-primary">StreetSmart Seller</span>
       </a>
-
-      <ul class="navbar-nav ms-auto align-items-center">
-        <li class="nav-item me-3">
-          <a href="../profile.php" class="nav-link">
-            <img src="../../assets/images/default-avatar.jpg" alt="Profile" class="profile-img" width="40" height="40"/>
-            <button class="btn btn-light">View Profile</button>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a href="../../controllers/logout.php" class="btn btn-light btn-sm fw-semibold px-3">Logout</a>
-        </li>
-      </ul>
+      <div class="ms-auto d-flex align-items-center gap-3">
+        <span class="fw-semibold text-muted">Hi, <?= htmlspecialchars($_SESSION['name'] ?? 'Seller'); ?></span>
+        <a href="../profile.php" class="btn btn-outline-primary btn-sm">Profile</a>
+        <a href="../../controllers/logout.php" class="btn btn-danger btn-sm">Logout</a>
+      </div>
     </div>
   </nav>
 
-  <div class="container mt-5 pt-5">
-    <div class="dashboard-header text-center">
-      <h3 class="text-primary">Welcome back, Seller</h3>
-      <p class="text-muted">Manage your products and grow your shop with StreetSmart Market</p>
-    </div>
+  <div class="container mt-5 pt-4">
+    <h3 class="fw-bold mb-4 text-center text-primary mt-5">Seller Dashboard</h3>
 
-    <div class="card add-product-card p-4 mb-5">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="fw-bold text-primary m-0">Add New Product</h5>
-        <button class="btn btn-primary add-btn px-4" type="button" data-bs-toggle="collapse" data-bs-target="#addProductForm">+ Add Product</button>
-      </div>
+    <?php if ($msg === 'added'): ?>
+      <div class="alert alert-success text-center">Product added successfully!</div>
+    <?php elseif ($msg === 'deleted'): ?>
+      <div class="alert alert-warning text-center">Product deleted.</div>
+    <?php elseif ($msg === 'updated'): ?>
+      <div class="alert alert-info text-center">Product updated.</div>
+    <?php endif; ?>
 
-      <div class="collapse" id="addProductForm">
-        <form action="../../controllers/add_product.php" method="POST" enctype="multipart/form-data">
-          <div class="row">
-            <div class="col-md-6 mb-3">
-              <label class="form-label fw-semibold">Product Name</label>
-              <input type="text" name="name" class="form-control" required />
-            </div>
-            <div class="col-md-6 mb-3">
-              <label class="form-label fw-semibold">Price (Ksh)</label>
-              <input type="number" name="price" class="form-control" min="0" required />
-            </div>
+    <div class="card shadow-sm p-4 mb-5 border-0">
+      <h5 class="fw-bold mb-3 text-primary">Add New Product</h5>
+      <form action="../../controllers/shop.php" method="POST" enctype="multipart/form-data" id="uploadForm">
+        <input type="hidden" name="action" value="add_product">
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Product Name</label>
+            <input type="text" name="name" class="form-control" required>
           </div>
-
-          <div class="mb-3">
-            <label class="form-label fw-semibold">Description</label>
-            <textarea name="description" rows="2" class="form-control" placeholder="Brief description..." required></textarea>
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">Price (Ksh)</label>
+            <input type="number" name="price" class="form-control" required>
           </div>
-
-          <div class="row">
-            <div class="col-md-6 mb-3">
-              <label class="form-label fw-semibold">Stock Quantity</label>
-              <input type="number" name="stock" class="form-control" min="1" required />
-            </div>
-            <div class="col-md-6 mb-3">
-              <label class="form-label fw-semibold">Upload Image</label>
-              <input type="file" name="image" class="form-control" accept="image/*" required />
-            </div>
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">Stock</label>
+            <input type="number" name="stock" class="form-control" required>
           </div>
-
-          <div class="text-end">
-            <button class="btn btn-success px-4 py-2 rounded-3">Save Product</button>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Category</label>
+            <select name="category" class="form-select" required>
+              <option value="">Select Category</option>
+              <option value="Food">Food</option>
+              <option value="Clothing">Clothing</option>
+              <option value="Electronics">Electronics</option>
+              <option value="Accessories">Accessories</option>
+              <option value="Other">Other</option>
+            </select>
           </div>
-        </form>
-      </div>
-    </div>
-
-    <div class="card product-list-card p-4">
-      <h5 class="fw-bold text-primary mb-4">My Products</h5>
-
-      <div class="row g-4">
-        <div class="col-md-4">
-          <div class="card product-card p-3">
-            <img src="../../assets/images/sample-product.jpeg" alt="Product" class="product-img mb-3" />
-            <h6 class="fw-bold mb-1">Handmade Necklace</h6>
-            <p class="text-muted mb-1">Ksh 1500</p>
-            <p class="small text-secondary">Stock: 15</p>
-            <div class="d-flex justify-content-between">
-              <button class="btn btn-outline-secondary btn-sm">Edit</button>
-              <button class="btn btn-outline-danger btn-sm">Delete</button>
-            </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Product Image</label>
+            <input type="file" name="image" id="imageInput" class="form-control" accept="image/*" required>
           </div>
         </div>
-      </div>
+
+        <div class="text-center mt-3">
+          <img id="imagePreview" src="#" alt="Preview" class="d-none img-thumbnail mt-2" width="150">
+        </div>
+
+        <div class="text-end mt-4">
+          <button type="submit" class="btn btn-primary px-4 fw-semibold">Upload Product</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="card shadow-sm p-4 border-0">
+      <h5 class="fw-bold mb-3 text-primary">My Products</h5>
+
+      <?php if (!empty($products)): ?>
+        <div class="table-responsive">
+          <table class="table align-middle table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>Image</th>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Price (Ksh)</th>
+                <th>Stock</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php foreach ($products as $product): ?>
+                <tr>
+                  <td><img src="<?= htmlspecialchars($product['image']); ?>" width="60" height="60" class="rounded"></td>
+                  <td><?= htmlspecialchars($product['name']); ?></td>
+                  <td><?= htmlspecialchars($product['category']); ?></td>
+                  <td><?= number_format($product['price']); ?></td>
+                  <td><?= $product['stock']; ?></td>
+                  <td>
+                    <a href="../edit_product.php?id=<?= $product['id']; ?>" class="btn btn-sm btn-outline-primary">Edit</a>
+                    <form action="../../controllers/shop.php" method="POST" class="d-inline">
+                      <input type="hidden" name="action" value="delete_product">
+                      <input type="hidden" name="product_id" value="<?= $product['id']; ?>">
+                      <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this product?')">Delete</button>
+                    </form>
+                  </td>
+                </tr>
+              <?php endforeach; ?>
+            </tbody>
+          </table>
+        </div>
+      <?php else: ?>
+        <div class="alert alert-info text-center">You haven't added any products yet.</div>
+      <?php endif; ?>
     </div>
   </div>
 
@@ -106,5 +157,17 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.getElementById('imageInput').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      const preview = document.getElementById('imagePreview');
+      if (file) {
+        preview.src = URL.createObjectURL(file);
+        preview.classList.remove('d-none');
+      } else {
+        preview.classList.add('d-none');
+      }
+    });
+  </script>
 </body>
 </html>
