@@ -10,4 +10,5 @@ class Review {
         return $stmt->execute([$product_id, $customer_id, $rating, $comment]);
     }
 }
+
 ?>
