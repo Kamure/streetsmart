@@ -30,9 +30,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $mail->isSMTP();
             $mail->Host = 'smtp.gmail.com';
             $mail->SMTPAuth = true;
-            $mail->Username = 'beyonce.kamure@strathmore.edu'; // 🔁 Replace with your Gmail
+            $mail->Username = 'beyonce.kamure@strathmore.edu'; 
             $mail->Password = 'xmwm yzno wnxb hrof
-';   // 🔁 Replace with your App Password
+';   
             $mail->SMTPSecure = 'ssl';
             $mail->Port = 465;
 
