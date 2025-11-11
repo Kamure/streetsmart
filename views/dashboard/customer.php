@@ -33,27 +33,27 @@ if (isset($_POST['checkout'])) {
     $error = "Your cart is empty!";
   } else {
     try {
-      $conn->beginTransaction();
+      $pdo->beginTransaction();
       $total = 0;
 
-      $stmt = $conn->prepare("INSERT INTO orders (customer_name, customer_email, customer_address, total_amount, created_at) VALUES (?, ?, ?, ?, NOW())");
-      
+      $stmt = $pdo->prepare("INSERT INTO orders (customer_name, customer_email, customer_address, total_amount, created_at) VALUES (?, ?, ?, ?, NOW())");
+
       foreach ($cart as $item) {
         $total += $item['price'] * $item['quantity'];
       }
       $stmt->execute([$customer_name, $customer_email, $customer_address, $total]);
-      $order_id = $conn->lastInsertId();
+      $order_id = $pdo->lastInsertId();
 
-      $stmtItem = $conn->prepare("INSERT INTO order_items (order_id, product_name, price, quantity) VALUES (?, ?, ?, ?)");
+      $stmtItem = $pdo->prepare("INSERT INTO order_items (order_id, product_name, price, quantity) VALUES (?, ?, ?, ?)");
       foreach ($cart as $item) {
         $stmtItem->execute([$order_id, $item['name'], $item['price'], $item['quantity']]);
       }
 
-      $conn->commit();
+      $pdo->commit();
       $_SESSION['cart'] = [];
       $success = "Payment successful! Your order #$order_id has been placed.";
     } catch (Exception $e) {
-      $conn->rollBack();
+      $pdo->rollBack();
       $error = "Checkout failed: " . $e->getMessage();
     }
   }
@@ -84,8 +84,8 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
       StreetSmart Market
     </a>
     <div class="d-flex">
-      <a href="profile.php" class="nav-link">Profile</a>
-      <a href="../../controllers/logout_controller.php" class="nav-link">Logout</a>
+      <a href="profile.php" class="btn btn-white text-primary me-2" style="background-color: white; border: 1px solid white;">Profile</a>
+      <a href="../../controllers/logout_controller.php" class="btn btn-white text-primary" style="background-color: white; border: 1px solid white;">Logout</a>
     </div>
   </div>
 </nav>
@@ -104,17 +104,19 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
       <p class="text-center text-muted">No products available right now.</p>
     <?php else: ?>
       <?php foreach ($products as $p): ?>
-        <div class="product-card">
-          <img src="<?= htmlspecialchars($p['image']); ?>" alt="<?= htmlspecialchars($p['name']); ?>">
-          <h4><?= htmlspecialchars($p['name']); ?></h4>
-          <p class="price">Ksh <?= number_format($p['price']); ?></p>
-          <form method="POST">
-            <input type="hidden" name="product_id" value="<?= $p['id']; ?>">
-            <input type="hidden" name="name" value="<?= htmlspecialchars($p['name']); ?>">
-            <input type="hidden" name="price" value="<?= htmlspecialchars($p['price']); ?>">
-            <button type="submit" name="add_to_cart" class="btn btn-primary btn-sm mt-2">Add to Cart</button>
-          </form>
-        </div>
+      <div class="product-card">
+        <img src="<?= htmlspecialchars($p['image']); ?>" alt="<?= htmlspecialchars($p['name']); ?>">
+        <h4><?= htmlspecialchars($p['name']); ?></h4>
+        <p class="price">Ksh <?= number_format($p['price']); ?></p>
+        <form method="POST">
+        <input type="hidden" name="product_id" value="<?= $p['id']; ?>">
+        <input type="hidden" name="name" value="<?= htmlspecialchars($p['name']); ?>">
+        <input type="hidden" name="price" value="<?= htmlspecialchars($p['price']); ?>">
+        <label for="quantity_<?= $p['id']; ?>" class="form-label mb-1">Quantity:</label>
+        <input type="number" id="quantity_<?= $p['id']; ?>" name="quantity" value="1" min="1" class="form-control mb-2" style="width: 80px;" required>
+        <button type="submit" name="add_to_cart" class="btn btn-primary btn-sm mt-2">Add to Cart</button>
+        </form>
+      </div>
       <?php endforeach; ?>
     <?php endif; ?>
   </div>
@@ -126,7 +128,7 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
       <p class="text-muted">Your cart is empty.</p>
     <?php else: ?>
       <form method="POST">
-        <table class="cart-table">
+        <table class="cart-table table table-bordered">
           <thead>
             <tr>
               <th>Product</th>
@@ -166,8 +168,45 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <form method="POST">
       <input type="text" name="customer_name" placeholder="Full Name" required>
       <input type="email" name="customer_email" placeholder="Email" required>
+      <input type="tel" name="customer_phone" placeholder="Phone Number" required>
       <input type="text" name="customer_address" placeholder="Delivery Address" required>
-      <button type="submit" name="checkout">Complete Payment</button>
+      <div class="mb-3">
+        <label class="form-label fw-bold">Choose Payment Method:</label><br>
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" type="radio" name="payment_method" id="mpesa" value="mpesa" required onclick="togglePaymentFields()">
+          <label class="form-check-label" for="mpesa">M-Pesa</label>
+        </div>
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" type="radio" name="payment_method" id="card" value="card" required onclick="togglePaymentFields()">
+          <label class="form-check-label" for="card">Card</label>
+        </div>
+      </div>
+      <div id="mpesa-fields" class="mb-3" style="display:none;">
+        <label for="mpesa_phone" class="form-label">M-Pesa Phone Number</label>
+        <input type="tel" class="form-control" id="mpesa_phone" name="mpesa_phone" placeholder="e.g. 07XXXXXXXX" pattern="^07\d{8}$">
+        <button type="button" class="btn btn-primary mt-2" onclick="alert('Simulate M-Pesa payment prompt')">Pay with M-Pesa</button>
+      </div>
+      <div id="card-fields" class="mb-3" style="display:none;">
+        <label for="card_number" class="form-label">Card Number</label>
+        <input type="text" class="form-control mb-2" id="card_number" name="card_number" maxlength="19" placeholder="Card Number">
+        <label for="card_expiry" class="form-label">Expiry Date</label>
+        <input type="text" class="form-control mb-2" id="card_expiry" name="card_expiry" maxlength="5" placeholder="MM/YY">
+        <label for="card_cvc" class="form-label">CVC</label>
+        <input type="text" class="form-control" id="card_cvc" name="card_cvc" maxlength="4" placeholder="CVC">
+      </div>
+      <script>
+        function togglePaymentFields() {
+          var mpesa = document.getElementById('mpesa').checked;
+          var card = document.getElementById('card').checked;
+          document.getElementById('mpesa-fields').style.display = mpesa ? 'block' : 'none';
+          document.getElementById('card-fields').style.display = card ? 'block' : 'none';
+        }
+      
+        document.addEventListener('DOMContentLoaded', function() {
+          togglePaymentFields();
+        });
+      </script>
+      <button type="submit" name="checkout" class="btn btn-success">Complete Payment</button>
     </form>
   </div>
 </div>
