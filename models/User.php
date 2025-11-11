@@ -21,6 +21,14 @@ class User {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    public function updateProfile($id, $name, $email, $phone) {
+    $stmt = $this->pdo->prepare("
+        UPDATE users 
+        SET name = ?, email = ?, phone = ?
+        WHERE id = ?
+    ");
+    return $stmt->execute([$name, $email, $phone, $id]);
+}
 
 }
 ?>
