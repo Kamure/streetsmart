@@ -241,6 +241,22 @@ footer a:hover {
   text-decoration: underline;
 }
 
+.profile-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.profile-avatar {
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.seller-profile-body {
+  background: linear-gradient(135deg, #f7f8fa, #eef1f5);
+}
+
 @media (max-width: 768px) {
   .register-card {
     padding: 1.5rem;
