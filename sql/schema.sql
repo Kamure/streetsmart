@@ -85,17 +85,6 @@ CREATE TABLE payments (
 
 CREATE TABLE reviews (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  product_id BIGINT,
-  customer_id BIGINT,
-  rating TINYINT,
-  comment TEXT,
-  created_at TIMESTAMP,
-  updated_at TIMESTAMP
-);
-
--
-CREATE TABLE seller_ratings (
-  id BIGINT AUTO_INCREMENT PRIMARY KEY,
   seller_id BIGINT,
   customer_id BIGINT,
   rating TINYINT,
