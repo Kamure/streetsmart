@@ -1,7 +1,8 @@
-<?php
+<?php 
 session_start();
 require_once '../config/database.php';
 
+// Only sellers can access
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'seller') {
     header("Location: login.php");
     exit;
@@ -11,6 +12,7 @@ $seller_id = $_SESSION['user']['id'];
 $name = $_SESSION['user']['name'];
 $email = $_SESSION['user']['email'];
 
+// Fetch profile info
 $stmt = $pdo->prepare("SELECT bio, skills, avatar_path FROM users WHERE id = ?");
 $stmt->execute([$seller_id]);
 $profile = $stmt->fetch();
@@ -34,7 +36,7 @@ $avatar = $profile['avatar_path'] ?? 'default-avatar.jpg';
 <body class="seller-profile-body">
   <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
     <div class="container-fluid px-4">
-      <a class="navbar-brand d-flex align-items-center" href="dashboard_seller.php">
+      <a class="navbar-brand d-flex align-items-center" href="seller.php">
         <img src="../assets/images/logo.png" alt="StreetSmart" class="navbar-logo" width="40" height="40" />
         <span class="fw-bold">StreetSmart Seller</span>
       </a>
@@ -45,7 +47,7 @@ $avatar = $profile['avatar_path'] ?? 'default-avatar.jpg';
           </a>
         </li>
         <li class="nav-item">
-          <a href="../controllers/logout.php" class="btn btn-light btn-sm fw-semibold px-3">Logout</a>
+          <a href="../controllers/logout_controller.php" class="btn btn-light btn-sm fw-semibold px-3">Logout</a>
         </li>
       </ul>
     </div>
@@ -95,28 +97,14 @@ $avatar = $profile['avatar_path'] ?? 'default-avatar.jpg';
               <button class="btn btn-success px-4 py-2 rounded-3">Save Changes</button>
             </div>
           </form>
-        </div>
 
-        <div class="card mt-4 p-4 shadow-sm">
-          <h5 class="fw-bold text-primary mb-3">Customer Ratings</h5>
-          <div class="d-flex align-items-center mb-3">
-            <span class="fs-4 text-warning me-2">4.8</span>
-            <div class="text-muted small">Average Rating (24 Reviews)</div>
+          <hr>
+
+          <div class="d-flex justify-content-center gap-2 mt-3">
+            <a href="dashboard/seller.php" class="btn btn-primary">Manage Products</a>
+            <a href="seller_reviews.php?seller_id=<?= $seller_id ?>" class="btn btn-outline-primary">View Ratings</a>
           </div>
 
-          <div class="review p-3 bg-light rounded mb-2">
-            <p class="mb-1 fw-semibold">"Amazing quality and fast delivery!"</p>
-            <small class="text-secondary">— John M.</small>
-          </div>
-
-          <div class="review p-3 bg-light rounded mb-2">
-            <p class="mb-1 fw-semibold">"Great communication and packaging."</p>
-            <small class="text-secondary">— Aisha K.</small>
-          </div>
-
-          <div class="text-center mt-3">
-            <button class="btn btn-outline-primary btn-sm">View All Reviews</button>
-          </div>
         </div>
       </div>
     </div>
@@ -129,3 +117,4 @@ $avatar = $profile['avatar_path'] ?? 'default-avatar.jpg';
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+
