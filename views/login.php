@@ -16,7 +16,7 @@
   <div class="container d-flex justify-content-center align-items-center min-vh-100">
     <div class="card login-card shadow-lg p-4 rounded-4">
       <div class="text-center mb-4">
-        <img src="../assets/images/logo.png" alt="StreetSmart Market" class="logo mb-3">
+        <img src="../assets/images/logo.png" alt="StreetSmart Market" class="logo mb-3" width="120">
         <h3 class="fw-bold text-primary">Welcome Back</h3>
         <p class="text-muted">Login to continue shopping or selling</p>
       </div>
