@@ -7,8 +7,9 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'customer') {
 }
 
 $user_id = $_SESSION['user']['id'];
-$stmt = $conn->prepare("SELECT * FROM orders WHERE user_id = :id ORDER BY created_at DESC");
-$stmt->execute(['id' => $user_id]);
+$user_role = $_SESSION['user']['role'];
+$stmt = $pdo->prepare("SELECT * FROM orders WHERE customer_id = ? ORDER BY created_at DESC");
+$stmt->execute([$user_id]);
 $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 

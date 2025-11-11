@@ -8,16 +8,15 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'seller') {
   exit;
 }
 
-$user_id = $_SESSION['user_id'];
+$user_id = $_SESSION['user']['id'];
 $msg = $_GET['msg'] ?? null;
 
 // Fetch seller’s products
 $products = [];
-$sql = "SELECT id, name, price, stock, category, image FROM products WHERE seller_id = ? ORDER BY id DESC";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$result = $stmt->get_result();
+$sql = "SELECT id, name, price, stock, category, image_path FROM products WHERE seller_id = ? ORDER BY id DESC";
+$stmt = $pdo->prepare($sql);
+$stmt->execute([$user_id]);
+$products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 if ($result && $result->num_rows > 0) {
   while ($row = $result->fetch_assoc()) {

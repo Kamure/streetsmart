@@ -4,7 +4,7 @@ require_once '../models/Cart.php';
 
 $cart = new Cart($pdo);
 session_start();
-$customer_id = $_SESSION['user_id'];
+$customer_id = $_SESSION['user']['id'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'];

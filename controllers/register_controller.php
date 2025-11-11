@@ -1,0 +1,43 @@
+<?php
+session_start();
+require_once '../config/database.php'; // ensures $pdo is available
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $name     = trim($_POST['name']);
+    $email    = trim($_POST['email']);
+    $phone    = trim($_POST['phone']);
+    $password = $_POST['password'];
+    $role     = $_POST['role'];
+
+    
+    if (!$name || !$email || !$phone || !$password || !$role) {
+        header("Location: ../views/register.php?msg=missing");
+        exit;
+    }
+
+    
+    $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
+    $stmt->execute([$email]);
+    if ($stmt->fetch()) {
+        header("Location: ../views/register.php?msg=exists");
+        exit;
+    }
+
+    
+    $hashed = password_hash($password, PASSWORD_DEFAULT);
+
+
+    $stmt = $pdo->prepare("
+        INSERT INTO users (name, email, phone, password, role, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, NOW(), NOW())
+    ");
+    $success = $stmt->execute([$name, $email, $phone, $hashed, $role]);
+
+    if ($success) {
+        header("Location: ../views/login.php?msg=registered");
+    } else {
+        header("Location: ../views/register.php?msg=error");
+    }
+    exit;
+}
+?>

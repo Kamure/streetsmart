@@ -59,12 +59,11 @@ if (isset($_POST['checkout'])) {
   }
 }
 
+
 $products = [];
-$sql = "SELECT id, name, price, image FROM products ORDER BY created_at DESC";
-$result = $conn->query($sql);
-if ($result && $result->rowCount() > 0) {
-  $products = $result->fetchAll(PDO::FETCH_ASSOC);
-}
+
+$stmt = $pdo->query("SELECT id, name, price, image FROM products ORDER BY created_at DESC");
+$products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <!DOCTYPE html>
