@@ -49,5 +49,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         echo "Invalid credentials.";
     }
+
+    // Store user info in session
+        $_SESSION['user_id'] = $user['id'];
+        $_SESSION['user_name'] = $user['name'];
+        $_SESSION['user_role'] = $user['role'];
+
+        // ✅ Redirect based on role
+        if ($user['role'] === 'seller') {
+            header('Location: ../views/dashboard/profile.php');
+            exit;
+        } elseif ($user['role'] === 'customer') {
+            header('Location: ../views/dashboard/customer.php');
+            exit;
+        } else {
+            // fallback if role missing
+            header('Location: ../views/dashboard/index.php');
+            exit;
+        }
+
 }
 ?>
+
