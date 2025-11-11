@@ -33,11 +33,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ");
     $success = $stmt->execute([$name, $email, $phone, $hashed, $role]);
 
-    if ($success) {
+if ($success) {
+        $subject = "Your StreetSmart OTP Code";
+        $message = "Hello $name,\n\nYour OTP code is: $otp\n\nUse this to verify your account.";
+        $headers = "From: no-reply@streetsmart.com";
+
+        mail($email, $subject, $message, $headers);
+
         header("Location: ../views/login.php?msg=registered");
     } else {
         header("Location: ../views/register.php?msg=error");
     }
     exit;
+
 }
 ?>
