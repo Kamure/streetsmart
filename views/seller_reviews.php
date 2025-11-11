@@ -2,7 +2,6 @@
 session_start();
 require_once '../config/database.php';
 
-// Make sure a seller_id is provided
 if (!isset($_GET['seller_id'])) {
     echo "Seller not specified.";
     exit;
@@ -10,7 +9,6 @@ if (!isset($_GET['seller_id'])) {
 
 $seller_id = intval($_GET['seller_id']);
 
-// Fetch seller info
 $stmt = $pdo->prepare("SELECT name, avatar_path FROM users WHERE id = ?");
 $stmt->execute([$seller_id]);
 $seller = $stmt->fetch();
@@ -20,7 +18,6 @@ if (!$seller) {
     exit;
 }
 
-// Fetch reviews for this seller
 $stmt = $pdo->prepare("SELECT r.rating, r.comment, u.name AS customer_name 
                        FROM reviews r
                        JOIN users u ON r.customer_id = u.id
@@ -29,7 +26,6 @@ $stmt = $pdo->prepare("SELECT r.rating, r.comment, u.name AS customer_name
 $stmt->execute([$seller_id]);
 $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Calculate average rating
 $avg_rating = 0;
 if (count($reviews) > 0) {
     $total = 0;
