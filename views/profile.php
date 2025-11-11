@@ -11,13 +11,13 @@ $seller_id = $_SESSION['user']['id'];
 $name = $_SESSION['user']['name'];
 $email = $_SESSION['user']['email'];
 
-$stmt = $pdo->prepare("SELECT bio, skills, avatar FROM users WHERE id = ?");
+$stmt = $pdo->prepare("SELECT bio, skills, avatar_path FROM users WHERE id = ?");
 $stmt->execute([$seller_id]);
 $profile = $stmt->fetch();
 
 $bio = $profile['bio'] ?? '';
 $skills = $profile['skills'] ?? '';
-$avatar = $profile['avatar'] ?? 'default-avatar.jpg';
+$avatar = $profile['avatar_path'] ?? 'default-avatar.jpg';
 ?>
 
 <!DOCTYPE html>
