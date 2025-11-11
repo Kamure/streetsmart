@@ -57,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // ✅ Redirect based on role
         if ($user['role'] === 'seller') {
-            header('Location: ../views/dashboard/profile.php');
+            header('Location: ../views/profile.php');
             exit;
         } elseif ($user['role'] === 'customer') {
             header('Location: ../views/dashboard/customer.php');
