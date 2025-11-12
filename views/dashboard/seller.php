@@ -1,6 +1,8 @@
 <?php
 session_start();
 require_once __DIR__ . '/../../config/database.php';
+require_once '../../models/review.php';
+
 
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'seller') {
     header('Location: ../login.php');
@@ -8,13 +10,17 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'seller') {
 }
 
 $user_id = $_SESSION['user']['id'];
+require_once '../../models/review.php';
+$review = new Review($pdo);
+$ratings = $review->getSellerRatings($seller_id);
+$seller_id = $user_id;
 $msg = $_GET['msg'] ?? null;
 
 $stmt = $pdo->prepare("SELECT * FROM shops WHERE user_id = ?");
 $stmt->execute([$user_id]);
 $shop = $stmt->fetch();
 $shop_id = $shop['id'] ?? null;
-
+$seller_id = $_SESSION['user']['id'];
 $products = [];
 if ($shop_id) {
     $stmt = $pdo->prepare("SELECT * FROM products WHERE shop_id = ? ORDER BY id DESC");
@@ -98,6 +104,12 @@ $sales = $stmt->fetch();
 
 <div class="card shadow-sm p-4 mb-4 border-0">
   <h5 class="fw-bold mb-3 text-primary">Sales Summary</h5>
+  <div class="text-end mb-4">
+  <a href="seller_reviews.php?id=<?= $_SESSION['user']['id'] ?>" class="btn btn-outline-primary">
+    View My Reviews
+  </a>
+</div>
+  
   <div class="row">
     <div class="col-md-6">
       <p><strong>Total Sales:</strong> KES <?= number_format($sales['total_sales'] ?? 0, 2) ?></p>

@@ -62,7 +62,7 @@ if (isset($_POST['checkout'])) {
                     VALUES (?, ?, ?, ?)
                 ");
 
-                foreach ($cart as $item) {
+                foreach ($_SESSION['cart'] as $product_id => $item) {
                     $stmtItem->execute([$order_id, $item['id'], $item['quantity'], $item['price']]);
                 }
 
@@ -124,7 +124,7 @@ $reviewModel = new Review($pdo);
 </nav>
 
 <div class="container mt-4">
-  <h2 class="fw-bold text-primary mb-4">Browse Products</h2>
+  <h2 class="fw-bold text-primary mb-4">Browse Available Products</h2>
 
   <?php if ($success): ?>
     <div class="alert alert-success"><?= htmlspecialchars($success); ?></div>

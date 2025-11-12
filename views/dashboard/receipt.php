@@ -26,7 +26,7 @@ $success = $_GET['status'] ?? 'failed';
     <h3>Payment <?= $success === 'success' ? 'Successful!' : 'Failed' ?></h3>
 
     <?php if ($success === 'success'): ?>
-      <div class="alert alert-success mt-3">Thank you! Your payment was successful. A receipt has been sent to your email.</div>
+      <div class="alert alert-success mt-3">Thank you!! Your payment was successful. A receipt has been sent to your email.</div>
       <a href="orders.php" class="btn btn-outline-primary mt-3">View Orders</a>
     <?php else: ?>
       <div class="alert alert-danger mt-3">Payment failed. Please try again or use a different method.</div>
