@@ -105,7 +105,7 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <?php else: ?>
       <?php foreach ($products as $p): ?>
       <div class="product-card">
-        <img src="<?= htmlspecialchars($p['image']); ?>" alt="<?= htmlspecialchars($p['name']); ?>">
+        <img src="/streetsmart/assets/images/<?= htmlspecialchars($p['image_path'] ?? 'default-product.jpg'); ?>" alt="<?= htmlspecialchars($p['name'] ?? 'Product'); ?>">
         <h4><?= htmlspecialchars($p['name']); ?></h4>
         <p class="price">Ksh <?= number_format($p['price']); ?></p>
         <form method="POST">

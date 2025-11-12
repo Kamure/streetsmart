@@ -78,7 +78,7 @@ if ($action === 'update_product') {
     if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
         $ext = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
         $filename = 'product_' . time() . '.' . $ext;
-        $upload_dir = __DIR__ . '/../uploads/';
+        $upload_dir = __DIR__ . '/../assets/images/';
         $destination = $upload_dir . $filename;
 
         if (move_uploaded_file($_FILES['image']['tmp_name'], $destination)) {

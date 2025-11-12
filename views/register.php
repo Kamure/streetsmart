@@ -20,7 +20,7 @@
         <p class="text-muted">Join StreetSmart Market today</p>
       </div>
 
-<form action="../views/profile.php" method="POST">
+<form action="../controllers/register_controller.php" method="POST">
         <div class="mb-3">
           <label for="name" class="form-label fw-semibold">Full Name</label>
           <input type="text" class="form-control" id="name" name="name">
