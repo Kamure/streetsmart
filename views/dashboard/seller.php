@@ -39,7 +39,7 @@ if ($shop_id) {
     <div class="container-fluid px-4">
         <a class="navbar-brand d-flex align-items-center" href="#">
             <img src="../../assets/images/logo.png" alt="StreetSmart Market" class="logo me-2" width="40">
-            <span class="fw-bold text-primary" style="color: white">StreetSmart Seller</span>
+            <span class="fw-bold" style="color: white;">StreetSmart Seller</span>
         </a>
         <div class="ms-auto d-flex align-items-center gap-3">
             <span class="fw-semibold text-white">Hi, <?= htmlspecialchars($_SESSION['user']['name']); ?></span>
@@ -136,7 +136,7 @@ if ($shop_id) {
                     <table class="table align-middle table-hover">
                         <thead class="table-light">
                             <tr>
-                                <th>Image</th>
+                                <th>Image</th>  
                                 <th>Name</th>
                                 <th>Category</th>
                                 <th>Price (Ksh)</th>
