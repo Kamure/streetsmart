@@ -2,12 +2,10 @@
 session_start();
 require_once '../../config/database.php';
 
-// Initialize cart
 if (!isset($_SESSION['cart'])) {
     $_SESSION['cart'] = [];
 }
 
-// Add to cart
 if (isset($_POST['add_to_cart'])) {
     $product_id = $_POST['product_id'];
     $name = $_POST['name'];
@@ -26,14 +24,12 @@ if (isset($_POST['add_to_cart'])) {
     }
 }
 
-// Clear cart
 if (isset($_POST['clear_cart'])) {
     $_SESSION['cart'] = [];
 }
 
 $success = $error = '';
 
-// Checkout
 if (isset($_POST['checkout'])) {
     if (!isset($_SESSION['user'])) {
         $error = "You must be logged in to checkout.";
@@ -257,7 +253,7 @@ document.addEventListener('DOMContentLoaded', togglePaymentFields);
 
 
   <div class="rate-seller-form mt-5">
-  <h3 class="fw-bold mb-3">Rate a Seller</h3>
+  <h3 class="fw-bold mb-3">Rate a Seller (Optional)</h3>
   <?php if ($customer_id && $sellers): ?>
     <form action="../../controllers/review.php" method="POST">
       <div class="mb-3">
