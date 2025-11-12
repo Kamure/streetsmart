@@ -50,11 +50,13 @@ if (isset($_POST['checkout'])) {
 
                 $payment_method = $_POST['payment_method'] ?? 'mpesa';
 
+                $shop_id = reset($cart)['shop_id']; 
+
                 $stmt = $pdo->prepare("
-                    INSERT INTO orders (customer_id, total, payment_method, status, created_at, updated_at)
-                    VALUES (?, ?, ?, 'pending', NOW(), NOW())
+                    INSERT INTO orders (customer_id, shop_id, total, payment_method, status, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, 'pending', NOW(), NOW())
                 ");
-                $stmt->execute([$customer_id, $total, $payment_method]);
+                $stmt->execute([$customer_id, $shop_id, $total, $payment_method]);
                 $order_id = $pdo->lastInsertId();
 
                 $stmtItem = $pdo->prepare("
@@ -62,13 +64,15 @@ if (isset($_POST['checkout'])) {
                     VALUES (?, ?, ?, ?)
                 ");
 
-                foreach ($_SESSION['cart'] as $product_id => $item) {
+                foreach ($cart as $item) {
                     $stmtItem->execute([$order_id, $item['id'], $item['quantity'], $item['price']]);
                 }
 
                 $pdo->commit();
                 $_SESSION['cart'] = [];
-                $success = "Payment successful! Your order #$order_id has been placed.";
+
+                header("Location: receipt.php?order_id=" . $order_id);
+                exit;
 
             } catch (Exception $e) {
                 $pdo->rollBack();
@@ -77,6 +81,7 @@ if (isset($_POST['checkout'])) {
         }
     }
 }
+
 
 $stmt = $pdo->query("SELECT id, name, price, image_path FROM products ORDER BY created_at DESC");
 $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -185,7 +190,7 @@ $reviewModel = new Review($pdo);
           </tr>
           <?php endforeach; ?>
         </tbody>
-      </table>
+        </table>
 
       <div class="text-end fw-bold mb-3">Total: Ksh <?= number_format($total); ?></div>
 
