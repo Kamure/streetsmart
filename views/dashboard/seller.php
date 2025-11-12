@@ -89,7 +89,25 @@ if ($shop_id) {
             </form>
         </div>
     <?php else: ?>
+<?php
+$stmt = $pdo->prepare("SELECT SUM(total) AS total_sales, COUNT(*) AS order_count FROM orders WHERE shop_id = ?");
+$stmt->execute([$shop_id]);
 
+$sales = $stmt->fetch();
+?>
+
+<div class="card shadow-sm p-4 mb-4 border-0">
+  <h5 class="fw-bold mb-3 text-primary">Sales Summary</h5>
+  <div class="row">
+    <div class="col-md-6">
+      <p><strong>Total Sales:</strong> KES <?= number_format($sales['total_sales'] ?? 0, 2) ?></p>
+      <p><strong>Orders:</strong> <?= $sales['order_count'] ?? 0 ?></p>
+    </div>
+    <div class="col-md-6 text-end">
+      <a href="../views/print_seller_orders.php?seller_id=<?= $user_id ?>" target="_blank" class="btn btn-outline-dark">Download Sales Report</a>
+    </div>
+  </div>
+</div>
         <div class="card shadow-sm p-4 mb-5 border-0">
             <h5 class="fw-bold mb-3 text-primary">Add New Product</h5>
             <form action="../../controllers/product.php" method="POST" enctype="multipart/form-data">
