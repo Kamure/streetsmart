@@ -128,7 +128,7 @@ $reviewModel = new Review($pdo);
 </nav>
 
 <div class="container mt-4">
-  <h2 class="fw-bold text-primary mb-4">Browse Products</h2>
+  <h2 class="fw-bold text-primary mb-4">Browse Available Products</h2>
 
   <?php if ($success): ?>
     <div class="alert alert-success"><?= htmlspecialchars($success); ?></div>
