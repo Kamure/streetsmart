@@ -62,7 +62,7 @@ if (isset($_POST['checkout'])) {
 
 $products = [];
 
-$stmt = $pdo->query("SELECT id, name, price, image FROM products ORDER BY created_at DESC");
+$stmt = $pdo->query("SELECT id, name, price, image_path FROM products ORDER BY created_at DESC");
 $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
