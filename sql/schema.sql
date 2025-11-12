@@ -14,6 +14,7 @@ CREATE TABLE users (
   created_at TIMESTAMP,
   updated_at TIMESTAMP
 );
+ALTER TABLE users ADD COLUMN is_verified TINYINT(1) DEFAULT 0; 
 
 
 CREATE TABLE shops (
