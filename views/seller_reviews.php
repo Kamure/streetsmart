@@ -1,14 +1,15 @@
 <?php
 session_start();
+
 require_once '../config/database.php';
 
-$seller_id = $_GET['id'] ?? null;
+$seller_id = $_SESSION['user']['id'] ?? null;
 
-if (!$seller_id) {
-    die("Seller ID not specified.");
+if (!$seller_id || $_SESSION['user']['role'] !== 'seller') {
+    die("Access denied.");
 }
 
-$stmtSeller = $pdo->prepare("SELECT id, name, email FROM users WHERE id = ? AND role = 'seller'");
+$stmtSeller = $pdo->prepare("SELECT id, name, email FROM users WHERE id = ? AND LOWER(role) = 'seller'");
 $stmtSeller->execute([$seller_id]);
 $seller = $stmtSeller->fetch(PDO::FETCH_ASSOC);
 
@@ -67,7 +68,9 @@ $total_reviews = $stats['total_reviews'] ?? 0;
     <?php endif; ?>
 
     <div class="mt-4">
-        <a href="customer.php" class="btn btn-secondary">Back to Dashboard</a>
+        <div class="mt-4">
+    <a href="profile.php" class="btn btn-secondary">Back to Profile</a>
+</div>
     </div>
 </div>
 

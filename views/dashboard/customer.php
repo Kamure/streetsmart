@@ -66,7 +66,7 @@ if (isset($_POST['checkout'])) {
                     VALUES (?, ?, ?, ?)
                 ");
 
-                foreach ($cart as $item) {
+                foreach ($_SESSION['cart'] as $product_id => $item) {
                     $stmtItem->execute([$order_id, $item['id'], $item['quantity'], $item['price']]);
                 }
 
