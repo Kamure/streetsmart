@@ -16,7 +16,6 @@ CREATE TABLE users (
 );
 ALTER TABLE users ADD COLUMN is_verified TINYINT(1) DEFAULT 0; 
 
-
 CREATE TABLE shops (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
   user_id BIGINT,
@@ -44,6 +43,18 @@ CREATE TABLE products (
   created_at TIMESTAMP,
   updated_at TIMESTAMP
 );
+
+CREATE TABLE services (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    shop_id BIGINT NOT NULL,
+    name VARCHAR(120),
+    description TEXT,
+    price DECIMAL(10,2) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (shop_id) REFERENCES shops(id)
+);
+
 
 CREATE TABLE orders (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -104,3 +115,5 @@ CREATE TABLE otp_codes (
   created_at TIMESTAMP,
   updated_at TIMESTAMP
 );
+
+
