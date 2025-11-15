@@ -1,45 +1,56 @@
 <?php
 session_start();
-require_once __DIR__ . '/../../config/database.php';
+require_once '../../config/database.php';
 require_once '../../models/review.php';
 
 
-if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'seller') {
+if (!isset($_SESSION['user'])) {
     header('Location: ../login.php');
     exit;
 }
 
-$user_id = $_SESSION['user']['id'];
-require_once '../../models/review.php';
-$review = new Review($pdo);
-$ratings = $review->getSellerRatings($seller_id);
-$seller_id = $user_id;
-$msg = $_GET['msg'] ?? null;
-
-$stmt = $pdo->prepare("SELECT * FROM shops WHERE user_id = ?");
-$stmt->execute([$user_id]);
-$shop = $stmt->fetch();
-$shop_id = $shop['id'] ?? null;
-$seller_id = $_SESSION['user']['id'];
-$products = [];
-if ($shop_id) {
-    $stmt = $pdo->prepare("SELECT * FROM products WHERE shop_id = ? ORDER BY id DESC");
-    $stmt->execute([$shop_id]);
-    $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+if ($_SESSION['user']['role'] !== 'seller') {
+    die("Access denied - Seller account required.");
 }
+
+$seller_id = $_SESSION['user']['id'];
+
+
+$stmt = $pdo->prepare("SELECT id, name, email FROM users WHERE id = ? AND role = 'seller'");
+$stmt->execute([$seller_id]);
+$seller = $stmt->fetch(PDO::FETCH_ASSOC);
+
+if (!$seller) {
+    die("Seller profile not found.");
+}
+
+$stmtShop = $pdo->prepare("SELECT * FROM shops WHERE user_id = ?");
+$stmtShop->execute([$seller_id]);
+$shop = $stmtShop->fetch(PDO::FETCH_ASSOC);
+
+$products = [];
+if ($shop){
+  $stmtProduct = $pdo->prepare("SELECT * FROM products WHERE shop_id = ?");
+  $stmtProduct->execute([$shop['id']]);
+  $products = $stmtProduct->fetchAll(PDO::FETCH_ASSOC);
+}
+
+$stmtServices = $pdo->prepare("SELECT * FROM services WHERE id = ?");
+$stmtServices->execute([$seller_id]);
+$services = $stmtServices->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Seller Dashboard | StreetSmart Market</title>
     <link rel="icon" type="image/png" href="../../assets/images/favicon.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../../assets/css/style.css">
 </head>
-<body class="dashboard-body">
+
+<div class="dashboard-container">
 
 <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
     <div class="container-fluid px-4">
@@ -56,8 +67,14 @@ if ($shop_id) {
 </nav>
 
 <div class="container mt-5 pt-4">
-    <h3 class="fw-bold mb-4 text-center text-primary mt-5">Seller Dashboard</h3>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="fw-bold text-primary mt-3 mb-0">Seller Dashboard</h3>
+                <a href="analytics.php" class="btn btn-info fw-semibold" style="color:white;">
+                        <i class="fa fa-chart-bar me-1"></i> Analytics & Reports
+                </a>
+        </div>
 
+    <?php $msg = $_GET['msg'] ?? null; ?>
     <?php if ($msg === 'added'): ?>
         <div class="alert alert-success text-center">Product added successfully!</div>
     <?php elseif ($msg === 'deleted'): ?>
@@ -66,65 +83,134 @@ if ($shop_id) {
         <div class="alert alert-info text-center">Product updated.</div>
     <?php elseif ($msg === 'shop_created'): ?>
         <div class="alert alert-success text-center">Shop created successfully!</div>
-    <?php endif; ?>
+  <?php endif; ?>
 
-    <?php if (!$shop_id): ?>
-        <div class="card shadow-sm p-4 mb-5 border-0">
-            <h5 class="fw-bold mb-3 text-primary">Create Your Shop</h5>
-            <form action="../../controllers/shop.php" method="POST" enctype="multipart/form-data">
-                <input type="hidden" name="action" value="create_shop">
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Shop Name</label>
-                    <input type="text" name="name" class="form-control" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Category</label>
-                    <input type="text" name="category" class="form-control" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Location</label>
-                    <input type="text" name="location" class="form-control" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Shop Logo</label>
-                    <input type="file" name="logo" class="form-control" accept="image/*" required>
-                </div>
-                <div class="text-end">
-                    <button type="submit" class="btn btn-success px-4 fw-semibold">Create Shop</button>
-                </div>
-            </form>
-        </div>
-    <?php else: ?>
-<?php
-$stmt = $pdo->prepare("SELECT SUM(total) AS total_sales, COUNT(*) AS order_count FROM orders WHERE shop_id = ?");
-$stmt->execute([$shop_id]);
+<?php if (!$shop): ?>
+    <div class="card shadow-sm p-4 mb-5 border-0">
+        <h5 class="fw-bold mb-3 text-primary">Create Your Shop</h5>
+        <form action="../../controllers/shop.php" method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="action" value="create_shop">
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Shop Name</label>
+                <input type="text" name="name" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold" placeholder="Clothing, Accessories, Electronics...">Category</label>
+                <input type="text" name="category" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Location</label>
+                <input type="text" name="location" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Shop Logo</label>
+                <input type="file" name="logo" class="form-control" accept="image/*" required>
+            </div>
+            <div class="text-end">
+                <button type="submit" class="btn btn-success px-4 fw-semibold">Create Shop</button>
+            </div>
+        </form>
+    </div>
 
-$sales = $stmt->fetch();
+<?php else: 
+    $shop_id = $shop['id'];
+    $stmt = $pdo->prepare("SELECT SUM(total) AS total_sales, COUNT(*) AS order_count FROM orders WHERE shop_id = ?");
+    $stmt->execute([$shop_id]);
+    $sales = $stmt->fetch();
+
+    // Seller rating summary
+    $reviewModel = new Review($pdo);
+    $avg_rating = $reviewModel->getAverageRating($seller_id);
+    $latest_reviews = $reviewModel->getSellerRatings($seller_id);
+    $total_reviews = is_array($latest_reviews) ? count($latest_reviews) : 0;
 ?>
 
-<div class="card shadow-sm p-4 mb-4 border-0">
-  <h5 class="fw-bold mb-3 text-primary">Sales Summary</h5>
-  <div class="text-end mb-4">
-  <a href="seller_reviews.php?id=<?= $_SESSION['user']['id'] ?>" class="btn btn-outline-primary">
-    View My Reviews
-  </a>
+<div class="mb-3 text-center">
+        <label class="me-3"><input type="radio" name="item_type" value="product" checked> Product</label>
+        <label><input type="radio" name="item_type" value="service"> Service</label>
 </div>
-  
-  <div class="row">
+
+<div class="d-flex justify-content-center">
+    <div id="service-fields" class="card shadow-sm p-4 mb-4 border-0" style="display:none; max-width: 600px; width:100%;">
+        <h5 class="fw-bold mb-3 text-primary">Add New Service</h5>
+        <div class="mb-3">
+            <label class="form-label fw-semibold">Service Name</label>
+            <input type="text" name="service_name" class="form-control" placeholder="Enter service name">
+        </div>
+        <div class="mb-3">
+            <label class="form-label fw-semibold">Description</label>
+            <textarea name="service_description" class="form-control" rows="3" placeholder="Describe your service"></textarea>
+        </div>
+        <div class="mb-3">
+            <label class="form-label fw-semibold">Price (Ksh)</label>
+            <input type="number" name="service_price" class="form-control" placeholder="e.g. 500">
+        </div>
+        <div class="text-end">
+            <button type="submit" class="btn btn-primary px-4 fw-semibold">Add Service</button>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleItemType() {
+    const type = document.querySelector('input[name="item_type"]:checked').value;
+    document.getElementById('service-fields').style.display = type === 'service' ? 'block' : 'none';
+    document.getElementById('product-form').style.display = type === 'product' ? 'block' : 'none';
+    document.getElementById('product-list').style.display = type === 'product' ? 'block' : 'none';
+}
+document.querySelectorAll('input[name="item_type"]').forEach(el => {
+    el.addEventListener('change', toggleItemType);
+});
+document.addEventListener('DOMContentLoaded', toggleItemType);
+</script>
+
+
+<div class="row g-4 mb-4">
     <div class="col-md-6">
-      <p><strong>Total Sales:</strong> KES <?= number_format($sales['total_sales'] ?? 0, 2) ?></p>
-      <p><strong>Orders:</strong> <?= $sales['order_count'] ?? 0 ?></p>
+        <div class="card shadow-sm p-4 border-0 h-100">
+            <h5 class="fw-bold mb-3 text-primary">Sales Summary</h5>
+            <p><strong>Total Sales:</strong> KES <?= number_format($sales['total_sales'] ?? 0, 2) ?></p>
+            <p><strong>Orders:</strong> <?= $sales['order_count'] ?? 0 ?></p>
+            <a href="../views/print_seller_orders.php?seller_id=<?= $user_id ?>" target="_blank" class="btn btn-outline-dark mt-2">Download Sales Report</a>
+        </div>
     </div>
-    <div class="col-md-6 text-end">
-      <a href="../views/print_seller_orders.php?seller_id=<?= $user_id ?>" target="_blank" class="btn btn-outline-dark">Download Sales Report</a>
+    <div class="col-md-6">
+        <div class="card shadow-sm p-4 border-0 h-100">
+            <h5 class="fw-bold mb-3 text-primary">My Ratings</h5>
+            <div class="mb-2">
+                <span class="fs-4 text-warning">&#9733; <?= $avg_rating ? number_format($avg_rating,1) : '0.0'; ?></span>
+                <span class="text-muted small">Average (<?= $total_reviews; ?> Reviews)</span>
+            </div>
+            <?php if ($latest_reviews): ?>
+                <div style="max-height:120px;overflow-y:auto;">
+                <?php foreach (array_slice($latest_reviews,0,3) as $review): ?>
+                    <div class="border-bottom pb-2 mb-2">
+                        <span class="text-warning"><?= str_repeat('&#9733;', (int)$review['rating']); ?></span>
+                        <span class="small text-muted ms-2">by <?= htmlspecialchars($review['customer_name']); ?></span><br>
+                        <span class="small">"<?= htmlspecialchars($review['comment']); ?>"</span>
+                    </div>
+                <?php endforeach; ?>
+                </div>
+            <?php else: ?>
+                <span class="text-muted">No reviews yet.</span>
+            <?php endif; ?>
+            <a href="../seller_reviews.php?id=<?= $_SESSION['user']['id'] ?>" class="btn btn-outline-primary mt-2">View All Reviews</a>
+        </div>
     </div>
-  </div>
 </div>
-        <div class="card shadow-sm p-4 mb-5 border-0">
+        <div id="product-form" class="card shadow-sm p-4 mb-5 border-0">
             <h5 class="fw-bold mb-3 text-primary">Add New Product</h5>
             <form action="../../controllers/product.php" method="POST" enctype="multipart/form-data">
                 <input type="hidden" name="action" value="add_product">
                 <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Shop Name</label>
+                        <input type="text" class="form-control" value="<?= htmlspecialchars($shop['name'] ?? '') ?>" readonly>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Shop Location</label>
+                        <input type="text" class="form-control" value="<?= htmlspecialchars($shop['location'] ?? '') ?>" readonly>
+                    </div>
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">Product Name</label>
                         <input type="text" name="name" class="form-control" required>
@@ -159,7 +245,7 @@ $sales = $stmt->fetch();
             </form>
         </div>
 
-        <div class="card shadow-sm p-4 border-0">
+        <div id="product-list" class="card shadow-sm p-4 border-0">
             <h5 class="fw-bold mb-3 text-primary">My Products</h5>
             <?php if (!empty($products)): ?>
                 <div class="table-responsive">

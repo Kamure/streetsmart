@@ -29,7 +29,7 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <h4>StreetSmart</h4>
     <a href="customer.php">Browse Products</a>
     <a href="orders.php" class="active">Order History</a>
-    <a href="../../controllers/logout_controller.php" class="logout-btn">Logout</a>
+  <a href="../../controllers/logout_controller.php" class="logout-btn">Logout</a>
   </div>
 
   <div class="main-content">
