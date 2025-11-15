@@ -3,8 +3,13 @@ require_once '../config/database.php';
 require_once '../models/Review.php';
 session_start();
 
+
 if (!isset($_SESSION['user']['id'])) {
     die("You must be logged in to rate sellers.");
+}
+
+if (!isset($_SESSION['user']['role'])) {
+    $_SESSION['user']['role'] = 'customer';
 }
 
 $reviewModel = new Review($pdo);
