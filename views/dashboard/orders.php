@@ -46,14 +46,17 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </thead>
         <tbody>
           <?php if ($orders): ?>
-            <?php foreach ($orders as $o): ?>
-              <tr>
-                <td>#<?= htmlspecialchars($o['id']) ?></td>
-                <td><?= htmlspecialchars($o['created_at']) ?></td>
-                <td><?= number_format($o['total']) ?></td>
-                <td><span class="badge bg-<?= $o['status'] === 'Completed' ? 'success' : 'warning' ?>"><?= htmlspecialchars($o['status']) ?></span></td>
-              </tr>
-            <?php endforeach; ?>
+           <?php foreach ($orders as $order): ?>
+  <tr>
+    <td><?= htmlspecialchars($order['id']); ?></td>
+    <td><?= htmlspecialchars($order['status']); ?></td>
+    <td><?= date('M d, Y', strtotime($order['created_at'])); ?></td>
+    <td>
+      
+      <a href="../receipt.php?order_id=<?= $order['id']; ?>" class="btn btn-sm btn-outline-primary">View Receipt</a>
+    </td>
+  </tr>
+<?php endforeach; ?>
           <?php else: ?>
             <tr><td colspan="4" class="text-center text-muted">No orders found.</td></tr>
           <?php endif; ?>

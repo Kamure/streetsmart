@@ -1,5 +1,8 @@
 <?php
 session_start();
+
+$seller_id = $_SESSION['user']['id'];
+
 require_once '../../config/database.php';
 require_once '../../models/review.php';
 
@@ -118,7 +121,7 @@ $services = $stmtServices->fetchAll(PDO::FETCH_ASSOC);
     $stmt->execute([$shop_id]);
     $sales = $stmt->fetch();
 
-    // Seller rating summary
+    
     $reviewModel = new Review($pdo);
     $avg_rating = $reviewModel->getAverageRating($seller_id);
     $latest_reviews = $reviewModel->getSellerRatings($seller_id);
@@ -148,8 +151,26 @@ $services = $stmtServices->fetchAll(PDO::FETCH_ASSOC);
         <div class="text-end">
             <button type="submit" class="btn btn-primary px-4 fw-semibold">Add Service</button>
         </div>
+        <div class="card shadow-sm p-4 border-0 h-100">
+    <h5 class="fw-bold mb-3 text-primary">Sales Summary</h5>
+    <p><strong>Total Sales:</strong> KES <?= number_format($sales['total_sales'] ?? 0, 2) ?></p>
+    <p><strong>Orders:</strong> <?= $sales['order_count'] ?? 0 ?></p>
+
+    
+    <div class="mt-3">
+        <a href="../print_seller_orders.php?seller_id=<?= $seller_id; ?>" class="btn btn-outline-dark">
+    Print Sales (Browser)
+</a>E43
+\] SDx
+        <a href="../controllers/export_orders_pdf.php" 
+           class="btn btn-outline-danger">Export Orders PDF</a>
+        <a href="../controllers/export_products_excel.php" 
+           class="btn btn-outline-success">Export Products Excel</a>
     </div>
 </div>
+
+    </div>
+</div>--
 
 <script>
 function toggleItemType() {
@@ -171,7 +192,7 @@ document.addEventListener('DOMContentLoaded', toggleItemType);
             <h5 class="fw-bold mb-3 text-primary">Sales Summary</h5>
             <p><strong>Total Sales:</strong> KES <?= number_format($sales['total_sales'] ?? 0, 2) ?></p>
             <p><strong>Orders:</strong> <?= $sales['order_count'] ?? 0 ?></p>
-            <a href="../views/print_seller_orders.php?seller_id=<?= $user_id ?>" target="_blank" class="btn btn-outline-dark mt-2">Download Sales Report</a>
+            <a href="../print_seller_orders.php?seller_id=<?= $user_id ?>" target="_blank" class="btn btn-outline-dark mt-2">Download Sales Report</a>
         </div>
     </div>
     <div class="col-md-6">

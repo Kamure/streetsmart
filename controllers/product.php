@@ -15,7 +15,7 @@ if ($action === 'add_product') {
     $stmt = $pdo->prepare("SELECT id FROM shops WHERE user_id = ?");
     $stmt->execute([$user_id]);
     $shop = $stmt->fetch();
-    
+         
     if (!$shop) {
         die('<div class="alert alert-danger text-center">You must create a shop first!</div>');
     }

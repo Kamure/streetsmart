@@ -128,6 +128,14 @@ $items = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
                         <?php else: ?>
                             <div class="alert alert-success mt-3 mb-0" style="font-size:1.1em;">Payment completed. Thank you!</div>
                         <?php endif; ?>
+                        <div class="alert alert-success mt-3 mb-0" style="font-size:1.1em;">Payment completed. Thank you!</div>
+<?php endif; ?>
+
+<!-- ✅ Place PDF download link here -->
+<div class="mt-3 text-center">
+  <a href="../../controllers/export_receipt_pdf.php?order_id=<?= htmlspecialchars($order['id']); ?>" class="btn btn-outline-primary">Download Receipt (PDF)</a>
+</div>
+</div> <!-- end of card -->
                     </div>
                 </div>
             </div>

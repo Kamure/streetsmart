@@ -240,6 +240,7 @@ $reviewModel = new Review($pdo);
             <td>Ksh <?= number_format($subtotal); ?></td>
           </tr>
           <?php endforeach; ?>
+          
         </tbody>
         </table>
 
@@ -298,6 +299,12 @@ $reviewModel = new Review($pdo);
         </div>
 
         <button type="submit" name="checkout" class="btn btn-success">Complete Payment</button>
+        
+    <div class="mt-3">
+        <a href="../controllers/export_receipt_pdf.php?order_id=<?= htmlspecialchars($order['id']) ?>" 
+           class="btn btn-outline-primary">Download Receipt (PDF)</a>
+    </div>
+</div>
       </form>
   <?php endif; ?>
 </div>
