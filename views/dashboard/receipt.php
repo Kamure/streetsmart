@@ -125,11 +125,10 @@ $items = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
                                 <input type="hidden" name="method" value="<?= htmlspecialchars($order['payment_method']); ?>">
                                 <button type="submit" class="btn btn-success px-4">Complete Payment</button>
                             </form>
-                        <?php else: ?>
-                            <div class="alert alert-success mt-3 mb-0" style="font-size:1.1em;">Payment completed. Thank you!</div>
-                        <?php endif; ?>
-                        <div class="alert alert-success mt-3 mb-0" style="font-size:1.1em;">Payment completed. Thank you!</div>
+<?php else: ?>
+    <div class="alert alert-success mt-3 mb-0" style="font-size:1.1em;">Payment completed. Thank you!</div>
 <?php endif; ?>
+<div class="alert alert-success mt-3 mb-0" style="font-size:1.1em;">Payment completed. Thank you!</div>
 
 <!-- ✅ Place PDF download link here -->
 <div class="mt-3 text-center">
