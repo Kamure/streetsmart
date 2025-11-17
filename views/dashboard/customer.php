@@ -15,27 +15,39 @@ if (!isset($_SESSION['cart'])) {
     $_SESSION['cart'] = [];
 }
 
+
 if (isset($_POST['add_to_cart'])) {
-    $product_id = $_POST['product_id'];
+  $item_type = $_POST['item_type'] ?? 'product';
+  if (isset($_POST['item_id'], $_POST['name'], $_POST['price'])) {
+    $item_id = $_POST['item_id'];
     $name = $_POST['name'];
     $price = $_POST['price'];
     $quantity = isset($_POST['quantity']) ? (int)$_POST['quantity'] : 1;
 
-    $stmtShopId = $pdo->prepare("SELECT shop_id FROM products WHERE id = ?");
-    $stmtShopId->execute([$product_id]);
-    $shop_id = $stmtShopId->fetchColumn();
-
-    if (isset($_SESSION['cart'][$product_id])) {
-      $_SESSION['cart'][$product_id]['quantity'] += $quantity;
+    if ($item_type === 'product') {
+      $stmtShopId = $pdo->prepare("SELECT shop_id FROM products WHERE id = ?");
+      $stmtShopId->execute([$item_id]);
+      $shop_id = $stmtShopId->fetchColumn();
     } else {
-      $_SESSION['cart'][$product_id] = [
-        'id' => $product_id,
+      $stmtShopId = $pdo->prepare("SELECT shop_id FROM services WHERE id = ?");
+      $stmtShopId->execute([$item_id]);
+      $shop_id = $stmtShopId->fetchColumn();
+    }
+
+    $cart_key = $item_type . '_' . $item_id;
+    if (isset($_SESSION['cart'][$cart_key])) {
+      $_SESSION['cart'][$cart_key]['quantity'] += $quantity;
+    } else {
+      $_SESSION['cart'][$cart_key] = [
+        'id' => $item_id,
         'name' => $name,
         'price' => $price,
         'quantity' => $quantity,
-        'shop_id' => $shop_id
+        'shop_id' => $shop_id,
+        'type' => $item_type
       ];
     }
+  }
 }
 
 if (isset($_POST['clear_cart'])) {
@@ -124,10 +136,13 @@ if (isset($_POST['checkout'])) {
     }
 }
 
-
-
+// Fetch products
 $stmt = $pdo->query("SELECT p.*, s.name AS shop_name, s.location AS shop_location FROM products p JOIN shops s ON p.shop_id = s.id ORDER BY p.created_at DESC");
 $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Fetch services
+$stmtServices = $pdo->query("SELECT sv.*, sh.name AS shop_name, sh.location AS shop_location, u.name AS seller_name FROM services sv JOIN shops sh ON sv.shop_id = sh.id JOIN users u ON sh.user_id = u.id ORDER BY sv.created_at DESC");
+$services = $stmtServices->fetchAll(PDO::FETCH_ASSOC);
 
 $customer_id = $_SESSION['user']['id'] ?? null;
 if ($customer_id && !isset($_SESSION['user']['role'])) {
@@ -175,6 +190,7 @@ $reviewModel = new Review($pdo);
 </nav>
 
 
+
 <div class="container mt-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="fw-bold text-primary mb-0">Browse Available Products</h2>
@@ -198,7 +214,7 @@ $reviewModel = new Review($pdo);
         <p class="mb-1"><span class="badge bg-info text-dark">Location: <?= htmlspecialchars($p['shop_location']); ?></span></p>
         <p class="price">Ksh <?= number_format($p['price']); ?></p>
         <form method="POST">
-          <input type="hidden" name="product_id" value="<?= $p['id']; ?>">
+          <input type="hidden" name="item_id" value="<?= $p['id']; ?>">
           <input type="hidden" name="name" value="<?= htmlspecialchars($p['name']); ?>">
           <input type="hidden" name="price" value="<?= htmlspecialchars($p['price']); ?>">
           <label for="quantity_<?= $p['id']; ?>" class="form-label mb-1">Quantity:</label>
@@ -209,6 +225,78 @@ $reviewModel = new Review($pdo);
       <?php endforeach; ?>
     <?php endif; ?>
   </div>
+
+  <hr class="my-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold text-primary mb-0">Browse Available Services</h2>
+  </div>
+  <div class="product-grid">
+    <?php if (empty($services)): ?>
+      <p class="text-center text-muted">No services available right now.</p>
+    <?php else: ?>
+      <?php
+        // Pre-fetch all seller info for modals
+        $serviceModals = [];
+        foreach ($services as $s):
+          $stmtPhone = $pdo->prepare('SELECT phone, id FROM users WHERE name = ? AND role = "seller"');
+          $stmtPhone->execute([$s['seller_name']]);
+          $sellerData = $stmtPhone->fetch(PDO::FETCH_ASSOC);
+          $sellerPhone = $sellerData['phone'] ?? null;
+          $sellerId = $sellerData['id'] ?? null;
+      ?>
+      <div class="product-card">
+        <h4><?= htmlspecialchars($s['name']); ?></h4>
+        <p class="mb-1"><span class="badge bg-secondary">Shop: <?= htmlspecialchars($s['shop_name']); ?></span></p>
+        <p class="mb-1"><span class="badge bg-info text-dark">Location: <?= htmlspecialchars($s['shop_location']); ?></span></p>
+        <p class="mb-1"><span class="badge bg-success">Seller: <?= htmlspecialchars($s['seller_name']); ?></span></p>
+        <p class="mb-1">Description: <?= htmlspecialchars($s['description']); ?></p>
+        <p class="price">Ksh <?= number_format($s['price']); ?></p>
+        <?php if ($sellerPhone): ?>
+          <button type="button" class="btn btn-outline-primary mt-2" data-bs-toggle="modal" data-bs-target="#contactSellerModal<?= $s['id']; ?>">Contact Seller</button>
+          <?php
+            ob_start();
+          ?>
+          <div class="modal fade" id="contactSellerModal<?= $s['id']; ?>" tabindex="-1" aria-labelledby="contactSellerModalLabel<?= $s['id']; ?>" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="contactSellerModalLabel<?= $s['id']; ?>">Contact <?= htmlspecialchars($s['seller_name']); ?></h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                  <div class="fw-bold mb-1">Shop: <?= htmlspecialchars($s['shop_name']); ?></div>
+                  <div class="mb-2">Location: <?= htmlspecialchars($s['shop_location']); ?></div>
+                  <?php
+                    require_once '../../models/review.php';
+                    $reviewModel = new Review($pdo);
+                    $sellerRating = $reviewModel->getAverageRating($sellerId);
+                    $sellerRating = $sellerRating ? number_format($sellerRating, 1) : '0.0';
+                  ?>
+                  <div class="mb-2">Rating: <span class="text-warning">&#9733; <?= $sellerRating; ?></span></div>
+                  <div class="mb-2">Phone: <span id="sellerPhone<?= $s['id']; ?>"><?= htmlspecialchars($sellerPhone); ?></span></div>
+                  <div class="mb-3">
+                    <a href="tel:<?= htmlspecialchars($sellerPhone); ?>" class="btn btn-success me-2">Call</a>
+                    <button type="button" class="btn btn-outline-secondary" onclick="navigator.clipboard.writeText('<?= htmlspecialchars($sellerPhone); ?>');this.innerText='Copied!';setTimeout(()=>{this.innerText='Copy Number'},1200);">Copy Number</button>
+                  </div>
+                  <div class="small text-muted">Please mention you found this service on StreetSmart Market.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <?php $serviceModals[] = ob_get_clean(); ?>
+        <?php else: ?>
+          <span class="text-muted">No phone number available</span>
+        <?php endif; ?>
+      </div>
+      <?php endforeach; ?>
+    <?php endif; ?>
+  </div>
+
+  <?php
+    if (!empty($serviceModals)) {
+      foreach ($serviceModals as $modalHtml) echo $modalHtml;
+    }
+  ?>
 
   <div class="cart-container mt-5">
   <h3 class="fw-bold mb-3">Your Cart</h3>

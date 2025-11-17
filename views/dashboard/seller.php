@@ -1,28 +1,22 @@
 <?php
 session_start();
-
-$seller_id = $_SESSION['user']['id'];
-
 require_once '../../config/database.php';
 require_once '../../models/review.php';
 
-
+// Check login and role
 if (!isset($_SESSION['user'])) {
     header('Location: ../login.php');
     exit;
 }
-
 if ($_SESSION['user']['role'] !== 'seller') {
     die("Access denied - Seller account required.");
 }
 
 $seller_id = $_SESSION['user']['id'];
 
-
 $stmt = $pdo->prepare("SELECT id, name, email FROM users WHERE id = ? AND role = 'seller'");
 $stmt->execute([$seller_id]);
 $seller = $stmt->fetch(PDO::FETCH_ASSOC);
-
 if (!$seller) {
     die("Seller profile not found.");
 }
@@ -32,15 +26,24 @@ $stmtShop->execute([$seller_id]);
 $shop = $stmtShop->fetch(PDO::FETCH_ASSOC);
 
 $products = [];
-if ($shop){
-  $stmtProduct = $pdo->prepare("SELECT * FROM products WHERE shop_id = ?");
-  $stmtProduct->execute([$shop['id']]);
-  $products = $stmtProduct->fetchAll(PDO::FETCH_ASSOC);
+if ($shop) {
+    $stmtProduct = $pdo->prepare("SELECT * FROM products WHERE shop_id = ?");
+    $stmtProduct->execute([$shop['id']]);
+    $products = $stmtProduct->fetchAll(PDO::FETCH_ASSOC);
+}
+// Fetch services for this seller: if shop exists, use shop_id, else use seller_id
+if ($shop) {
+    $stmtServices = $pdo->prepare("SELECT * FROM services WHERE shop_id = ?");
+    $stmtServices->execute([$shop['id']]);
+    $services = $stmtServices->fetchAll(PDO::FETCH_ASSOC);
+} else {
+    $services = [];
 }
 
-$stmtServices = $pdo->prepare("SELECT * FROM services WHERE id = ?");
-$stmtServices->execute([$seller_id]);
-$services = $stmtServices->fetchAll(PDO::FETCH_ASSOC);
+$reviewModel = new Review($pdo);
+$avg_rating = $reviewModel->getAverageRating($seller_id);
+$latest_reviews = $reviewModel->getSellerRatings($seller_id);
+$total_reviews = is_array($latest_reviews) ? count($latest_reviews) : 0;
 ?>
 
 <!DOCTYPE html>
@@ -62,7 +65,7 @@ $services = $stmtServices->fetchAll(PDO::FETCH_ASSOC);
             <span class="fw-bold" style="color: white;">StreetSmart Seller</span>
         </a>
         <div class="ms-auto d-flex align-items-center gap-3">
-            <span class="fw-semibold text-white">Hi, <?= htmlspecialchars($_SESSION['user']['name']); ?></span>
+            <span class="fw-semibold text-white">Hi, <?= isset($_SESSION['user']['name']) ? htmlspecialchars($_SESSION['user']['name']) : 'Seller'; ?></span>
             <a href="../profile.php" class="btn btn-outline-dark btn-sm bg-white text-black border-black">Profile</a>
             <a href="../../controllers/logout_controller.php" class="btn btn-danger btn-sm">Logout</a>
         </div>
@@ -88,102 +91,50 @@ $services = $stmtServices->fetchAll(PDO::FETCH_ASSOC);
         <div class="alert alert-success text-center">Shop created successfully!</div>
   <?php endif; ?>
 
+<!-- Optional shop creation -->
 <?php if (!$shop): ?>
-    <div class="card shadow-sm p-4 mb-5 border-0">
-        <h5 class="fw-bold mb-3 text-primary">Create Your Shop</h5>
-        <form action="../../controllers/shop.php" method="POST" enctype="multipart/form-data">
-            <input type="hidden" name="action" value="create_shop">
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Shop Name</label>
-                <input type="text" name="name" class="form-control" required>
-            </div>
-            <div class="mb-3">
-                <label class="form-label fw-semibold" placeholder="Clothing, Accessories, Electronics...">Category</label>
-                <input type="text" name="category" class="form-control" required>
-            </div>
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Location</label>
-                <input type="text" name="location" class="form-control" required>
-            </div>
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Shop Logo</label>
-                <input type="file" name="logo" class="form-control" accept="image/*" required>
-            </div>
-            <div class="text-end">
-                <button type="submit" class="btn btn-success px-4 fw-semibold">Create Shop</button>
-            </div>
-        </form>
-    </div>
+    <div id="shop-create-alert" class="alert alert-info text-center">You can add services and view your dashboard without a shop. Create a shop only if you want to add products.</div>
+<?php endif; ?>
 
-<?php else: 
+<?php
+if ($shop) {
     $shop_id = $shop['id'];
     $stmt = $pdo->prepare("SELECT SUM(total) AS total_sales, COUNT(*) AS order_count FROM orders WHERE shop_id = ?");
     $stmt->execute([$shop_id]);
     $sales = $stmt->fetch();
 
-    
+    // Check for products
+    $stmtProductCount = $pdo->prepare("SELECT COUNT(*) FROM products WHERE shop_id = ?");
+    $stmtProductCount->execute([$shop_id]);
+    $product_count = $stmtProductCount->fetchColumn();
+
+    // Check for orders
+    $stmtOrderCount = $pdo->prepare("SELECT COUNT(*) FROM orders WHERE shop_id = ?");
+    $stmtOrderCount->execute([$shop_id]);
+    $order_count = $stmtOrderCount->fetchColumn();
+
     $reviewModel = new Review($pdo);
     $avg_rating = $reviewModel->getAverageRating($seller_id);
     $latest_reviews = $reviewModel->getSellerRatings($seller_id);
     $total_reviews = is_array($latest_reviews) ? count($latest_reviews) : 0;
+
+    if ($product_count == 0) {
+        echo '<div class="alert alert-warning text-center">You have not added any products to your shop. Add products to start receiving orders.</div>';
+    } elseif ($order_count == 0) {
+        echo '<div class="alert alert-info text-center">You have products, but no orders yet. Share your shop or wait for customers to place orders.</div>';
+    }
+} else {
+    $sales = ['total_sales' => 0, 'order_count' => 0];
+    $avg_rating = 0;
+    $latest_reviews = [];
+    $total_reviews = 0;
+}
 ?>
 
 <div class="mb-3 text-center">
-        <label class="me-3"><input type="radio" name="item_type" value="product" checked> Product</label>
-        <label><input type="radio" name="item_type" value="service"> Service</label>
+    <label class="me-3"><input type="radio" name="item_type" value="product" checked> Product</label>
+    <label><input type="radio" name="item_type" value="service"> Service</label>
 </div>
-
-<div class="d-flex justify-content-center">
-    <div id="service-fields" class="card shadow-sm p-4 mb-4 border-0" style="display:none; max-width: 600px; width:100%;">
-        <h5 class="fw-bold mb-3 text-primary">Add New Service</h5>
-        <div class="mb-3">
-            <label class="form-label fw-semibold">Service Name</label>
-            <input type="text" name="service_name" class="form-control" placeholder="Enter service name">
-        </div>
-        <div class="mb-3">
-            <label class="form-label fw-semibold">Description</label>
-            <textarea name="service_description" class="form-control" rows="3" placeholder="Describe your service"></textarea>
-        </div>
-        <div class="mb-3">
-            <label class="form-label fw-semibold">Price (Ksh)</label>
-            <input type="number" name="service_price" class="form-control" placeholder="e.g. 500">
-        </div>
-        <div class="text-end">
-            <button type="submit" class="btn btn-primary px-4 fw-semibold">Add Service</button>
-        </div>
-        <div class="card shadow-sm p-4 border-0 h-100">
-    <h5 class="fw-bold mb-3 text-primary">Sales Summary</h5>
-    <p><strong>Total Sales:</strong> KES <?= number_format($sales['total_sales'] ?? 0, 2) ?></p>
-    <p><strong>Orders:</strong> <?= $sales['order_count'] ?? 0 ?></p>
-
-    
-    <div class="mt-3">
-        <a href="../print_seller_orders.php?seller_id=<?= $seller_id; ?>" class="btn btn-outline-dark">
-    Print Sales (Browser)
-</a>
-        <a href="/streetsmart/controllers/export_orders_pdf.php" 
-           class="btn btn-outline-danger">Export Orders PDF</a>
-        <a href="/streetsmart/controllers/export_products_excel.php" 
-           class="btn btn-outline-success">Export Products Excel</a>
-    </div>
-</div>
-
-    </div>
-</div>--
-
-<script>
-function toggleItemType() {
-    const type = document.querySelector('input[name="item_type"]:checked').value;
-    document.getElementById('service-fields').style.display = type === 'service' ? 'block' : 'none';
-    document.getElementById('product-form').style.display = type === 'product' ? 'block' : 'none';
-    document.getElementById('product-list').style.display = type === 'product' ? 'block' : 'none';
-}
-document.querySelectorAll('input[name="item_type"]').forEach(el => {
-    el.addEventListener('change', toggleItemType);
-});
-document.addEventListener('DOMContentLoaded', toggleItemType);
-</script>
-
 
 <div class="row g-4 mb-4">
     <div class="col-md-6">
@@ -191,7 +142,7 @@ document.addEventListener('DOMContentLoaded', toggleItemType);
             <h5 class="fw-bold mb-3 text-primary">Sales Summary</h5>
             <p><strong>Total Sales:</strong> KES <?= number_format($sales['total_sales'] ?? 0, 2) ?></p>
             <p><strong>Orders:</strong> <?= $sales['order_count'] ?? 0 ?></p>
-            <a href="../print_seller_orders.php?seller_id=<?= $user_id ?>" target="_blank" class="btn btn-outline-dark mt-2">Download Sales Report</a>
+            <a href="analytics.php" class="btn btn-outline-dark">View Sales Summary</a>
         </div>
     </div>
     <div class="col-md-6">
@@ -218,6 +169,48 @@ document.addEventListener('DOMContentLoaded', toggleItemType);
         </div>
     </div>
 </div>
+
+
+<div class="row mb-4">
+  <div class="col-md-6 mx-auto">
+    <div id="service-fields" class="card shadow-sm p-4 mb-4 border-0" style="display:none;">
+      <h5 class="fw-bold mb-3 text-primary">Add New Service</h5>
+      <form action="../../controllers/service.php" method="POST">
+        <input type="hidden" name="action" value="add_service">
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Service Name</label>
+          <input type="text" name="service_name" class="form-control" placeholder="Enter service name">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Description</label>
+          <textarea name="service_description" class="form-control" rows="3" placeholder="Describe your service"></textarea>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Price (Ksh)</label>
+          <input type="number" name="service_price" class="form-control" placeholder="e.g. 500">
+        </div>
+        <div class="text-end">
+          <button type="submit" class="btn btn-primary px-4 fw-semibold">Add Service</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleItemType() {
+    const type = document.querySelector('input[name="item_type"]:checked').value;
+    document.getElementById('service-fields').style.display = type === 'service' ? 'block' : 'none';
+    document.getElementById('product-form').style.display = type === 'product' ? 'block' : 'none';
+    document.getElementById('product-list').style.display = type === 'product' ? 'block' : 'none';
+}
+document.querySelectorAll('input[name="item_type"]').forEach(el => {
+    el.addEventListener('change', toggleItemType);
+});
+document.addEventListener('DOMContentLoaded', toggleItemType);
+</script>
+
+
         <div id="product-form" class="card shadow-sm p-4 mb-5 border-0">
             <h5 class="fw-bold mb-3 text-primary">Add New Product</h5>
             <form action="../../controllers/product.php" method="POST" enctype="multipart/form-data">
@@ -305,7 +298,71 @@ document.addEventListener('DOMContentLoaded', toggleItemType);
                 <div class="alert alert-info text-center">You haven't added any products yet.</div>
             <?php endif; ?>
         </div>
-    <?php endif; ?>
+
+<div id="service-list-section" class="mb-4">
+  <h5 class="fw-bold mb-3 text-primary">My Services</h5>
+  <?php if (!empty($services)): ?>
+    <div class="row g-3">
+      <?php $serviceModals = [];
+      foreach ($services as $service): ?>
+        <div class="col-md-4">
+          <div class="card h-100 border-primary">
+            <div class="card-body">
+              <h6 class="card-title fw-bold text-primary"><?= htmlspecialchars($service['name']); ?></h6>
+              <p class="card-text mb-2 small"><?= htmlspecialchars($service['description']); ?></p>
+              <p class="mb-2"><span class="fw-semibold">Price:</span> Ksh <?= number_format($service['price']); ?></p>
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editServiceModal<?= $service['id']; ?>">Edit</button>
+                <form action="../../controllers/service.php" method="POST" class="d-inline">
+                  <input type="hidden" name="action" value="delete_service">
+                  <input type="hidden" name="service_id" value="<?= $service['id']; ?>">
+                  <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this service?')">Delete</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+        <?php ob_start(); ?>
+        <div class="modal fade" id="editServiceModal<?= $service['id']; ?>" tabindex="-1" aria-labelledby="editServiceModalLabel<?= $service['id']; ?>" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <form action="../../controllers/service.php" method="POST">
+                <input type="hidden" name="action" value="edit_service">
+                <input type="hidden" name="service_id" value="<?= $service['id']; ?>">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="editServiceModalLabel<?= $service['id']; ?>">Edit Service</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  <div class="mb-3">
+                    <label class="form-label fw-semibold">Service Name</label>
+                    <input type="text" name="service_name" class="form-control" value="<?= htmlspecialchars($service['name']); ?>" required>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label fw-semibold">Description</label>
+                    <textarea name="service_description" class="form-control" rows="3" required><?= htmlspecialchars($service['description']); ?></textarea>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label fw-semibold">Price (Ksh)</label>
+                    <input type="number" name="service_price" class="form-control" value="<?= htmlspecialchars($service['price']); ?>" required>
+                  </div>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                  <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+        <?php $serviceModals[] = ob_get_clean(); ?>
+      <?php endforeach; ?>
+    </div>
+    <?php foreach ($serviceModals as $modalHtml) echo $modalHtml; ?>
+  <?php else: ?>
+    <div class="alert alert-info text-center">You haven't added any services yet.</div>
+  <?php endif; ?>
+</div>
 </div>
 
 <footer class="text-center mt-5 mb-3 text-muted small">

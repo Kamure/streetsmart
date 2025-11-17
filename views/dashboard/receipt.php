@@ -119,18 +119,24 @@ $items = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
                         <a href="orders.php" class="btn btn-primary">View All Orders</a>
                     </div>
                     <div class="text-center mt-4">
+
                         <?php if ($order['status'] !== 'paid'): ?>
                             <form id="completePaymentForm" action="../../controllers/payment.php" method="POST" class="d-inline-block mt-3">
                                 <input type="hidden" name="order_id" value="<?= htmlspecialchars($order['id']); ?>">
                                 <input type="hidden" name="method" value="<?= htmlspecialchars($order['payment_method']); ?>">
                                 <button type="submit" class="btn btn-success px-4">Complete Payment</button>
                             </form>
-<?php else: ?>
-    <div class="alert alert-success mt-3 mb-0" style="font-size:1.1em;">Payment completed. Thank you!</div>
-<?php endif; ?>
-<div class="alert alert-success mt-3 mb-0" style="font-size:1.1em;">Payment completed. Thank you!</div>
+                        <?php endif; ?>
 
-<!-- ✅ Place PDF download link here -->
+                        <?php
+                        if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+                        if (isset($_SESSION['show_payment_success']) && $_SESSION['show_payment_success'] && $order['status'] === 'paid') {
+                            echo '<div class="alert alert-success mt-3 mb-0" style="font-size:1.1em;">Payment completed. Thank you!</div>';
+                            unset($_SESSION['show_payment_success']);
+                        }
+                        ?>
+
+<!-- PDF download link here -->
 <div class="mt-3 text-center">
   <a href="../../controllers/export_receipt_pdf.php?order_id=<?= htmlspecialchars($order['id']); ?>" class="btn btn-outline-primary">Download Receipt (PDF)</a>
 </div>
