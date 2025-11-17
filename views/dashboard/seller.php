@@ -161,7 +161,7 @@ $services = $stmtServices->fetchAll(PDO::FETCH_ASSOC);
         <a href="../print_seller_orders.php?seller_id=<?= $seller_id; ?>" class="btn btn-outline-dark">
     Print Sales (Browser)
 </a>
-        <a href="../controllers/export_orders_pdf.php" 
+        <a href="/streetsmart/controllers/export_orders_pdf.php" 
            class="btn btn-outline-danger">Export Orders PDF</a>
         <a href="/streetsmart/controllers/export_products_excel.php" 
            class="btn btn-outline-success">Export Products Excel</a>
