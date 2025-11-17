@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once '../../config/database.php';
+require_once '../config/database.php';
 
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'seller') {
     echo "Access denied.";
@@ -10,9 +10,15 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'seller') {
 $seller_id = $_GET['seller_id'] ?? $_SESSION['user']['id'];
 
 $stmt = $pdo->prepare("
-    SELECT o.id AS order_id, o.customer_name, o.customer_email, o.total_amount, o.created_at
+    SELECT 
+        o.id AS order_id,
+        u.name AS customer_name,
+        u.email AS customer_email,
+        o.total AS total_amount,
+        o.created_at
     FROM orders o
     JOIN shops s ON o.shop_id = s.id
+    JOIN users u ON o.customer_id = u.id
     WHERE s.user_id = ?
     ORDER BY o.created_at DESC
 ");
