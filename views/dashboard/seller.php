@@ -160,11 +160,10 @@ $services = $stmtServices->fetchAll(PDO::FETCH_ASSOC);
     <div class="mt-3">
         <a href="../print_seller_orders.php?seller_id=<?= $seller_id; ?>" class="btn btn-outline-dark">
     Print Sales (Browser)
-</a>E43
-\] SDx
+</a>
         <a href="../controllers/export_orders_pdf.php" 
            class="btn btn-outline-danger">Export Orders PDF</a>
-        <a href="../controllers/export_products_excel.php" 
+        <a href="/streetsmart/controllers/export_products_excel.php" 
            class="btn btn-outline-success">Export Products Excel</a>
     </div>
 </div>

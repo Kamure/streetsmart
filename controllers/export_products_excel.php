@@ -25,19 +25,21 @@ $sheet->setTitle('Products');
 
 $headers = ['ID','Name','Category','Price','Stock','Updated'];
 foreach ($headers as $i => $h) {
-    $sheet->setCellValueByColumnAndRow($i+1, 1, $h);
+    $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($i+1);
+    $sheet->setCellValue($colLetter.'1', $h);
 }
 
 $row = 2;
 foreach ($products as $p) {
-    $sheet->setCellValueByColumnAndRow(1, $row, $p['id']);
-    $sheet->setCellValueByColumnAndRow(2, $row, $p['name']);
-    $sheet->setCellValueByColumnAndRow(3, $row, $p['category']);
-    $sheet->setCellValueByColumnAndRow(4, $row, $p['price']);
-    $sheet->setCellValueByColumnAndRow(5, $row, $p['stock']);
-    $sheet->setCellValueByColumnAndRow(6, $row, $p['updated_at']);
+    $sheet->setCellValue('A'.$row, $p['id']);
+    $sheet->setCellValue('B'.$row, $p['name']);
+    $sheet->setCellValue('C'.$row, $p['category']);
+    $sheet->setCellValue('D'.$row, $p['price']);
+    $sheet->setCellValue('E'.$row, $p['stock']);
+    $sheet->setCellValue('F'.$row, $p['updated_at']);
     $row++;
 }
+
 
 header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
 header('Content-Disposition: attachment; filename="products_report.xlsx"');
