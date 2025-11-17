@@ -13,7 +13,7 @@ $stored_otp = $_SESSION['otp'] ?? null;
 
 if ($entered_otp === $stored_otp) {
     // Mark user as verified
-    $stmt = $pdo->prepare("UPDATE users SET is_verified = 1 WHERE id = ?");
+    $stmt = $pdo->prepare("UPDATE users SET is_verified = 1, email_verified_at = NOW() WHERE id = ?");
     $stmt->execute([$user_id]);
 
     // Clear session OTP data
